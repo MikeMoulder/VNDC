@@ -1,13 +1,28 @@
 # Python
 backend/.venv/
 backend/__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
 backend/.pytest_cache/
 backend/.env
+.venv/
+.env
+
+# Tooling
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
 
 # Node
 frontend/node_modules/
 frontend/.next/
 frontend/.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # OS
 .DS_Store
