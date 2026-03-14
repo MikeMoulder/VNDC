@@ -100,13 +100,12 @@ export default function HistoryPage() {
             >
               <div className="flex flex-wrap items-center gap-3">
                 <span
-                  className={`badge ${
-                    item.verdict.rating === "BUY"
+                  className={`badge ${item.verdict.rating === "BUY"
                       ? "badge-success"
                       : item.verdict.rating === "WATCH"
                         ? "badge-warning"
                         : "badge-danger"
-                  }`}
+                    }`}
                 >
                   <RatingIcon rating={item.verdict.rating} />
                   {item.verdict.rating}
@@ -142,11 +141,10 @@ export default function HistoryPage() {
                 <div className="rounded-lg bg-white/[0.03] p-3">
                   <p className="text-label">24h</p>
                   <p
-                    className={`mt-2 font-semibold tabular-nums ${
-                      item.market_snapshot.change_24h_pct >= 0
+                    className={`mt-2 font-semibold tabular-nums ${item.market_snapshot.change_24h_pct >= 0
                         ? "text-emerald-400"
                         : "text-rose-400"
-                    }`}
+                      }`}
                   >
                     {item.market_snapshot.change_24h_pct >= 0 ? "+" : ""}
                     {item.market_snapshot.change_24h_pct.toFixed(2)}%

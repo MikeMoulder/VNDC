@@ -91,13 +91,12 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       >
         <div className="flex flex-wrap items-start gap-4">
           <div
-            className={`badge ${
-              verdict.verdict.rating === "BUY"
+            className={`badge ${verdict.verdict.rating === "BUY"
                 ? "badge-success"
                 : verdict.verdict.rating === "WATCH"
                   ? "badge-warning"
                   : "badge-danger"
-            }`}
+              }`}
           >
             <RatingIcon className="h-5 w-5" />
             <span className="text-lg font-bold">
@@ -163,11 +162,10 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
           <div className="rounded-xl bg-white/[0.03] p-4">
             <p className="text-label">24h Change</p>
             <p
-              className={`mt-2 text-2xl font-bold tabular-nums ${
-                verdict.market_snapshot.change_24h_pct >= 0
+              className={`mt-2 text-2xl font-bold tabular-nums ${verdict.market_snapshot.change_24h_pct >= 0
                   ? "text-emerald-400"
                   : "text-rose-400"
-              }`}
+                }`}
             >
               {verdict.market_snapshot.change_24h_pct >= 0 ? "+" : ""}
               {verdict.market_snapshot.change_24h_pct.toFixed(2)}%

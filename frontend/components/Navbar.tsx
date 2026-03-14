@@ -42,11 +42,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`btn-tertiary ${
-                  pathname === "/history" && link.href === "/history"
+                className={`btn-tertiary ${pathname === "/history" && link.href === "/history"
                     ? "bg-white/10 text-white"
                     : ""
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
@@ -81,11 +80,10 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  pathname === "/history" && link.href === "/history"
+                className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${pathname === "/history" && link.href === "/history"
                     ? "bg-white/10 text-white"
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                }`}
+                  }`}
               >
                 {link.label}
               </Link>
