@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import httpx
 
 from app.core.config import settings
 from app.services.token_resolver import ResolvedToken
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,54 +26,69 @@ class MarketBundle:
 
 
 async def _coingecko_market(symbol: str) -> dict:
-    async with httpx.AsyncClient() as client:
-        search = await client.get(
-            f"{settings.coingecko_base_url}/search",
-            params={"query": symbol},
-            timeout=10.0,
-        )
-        if search.status_code != 200:
-            return {}
+    try:
+        async with httpx.AsyncClient() as client:
+            search = await client.get(
+                f"{settings.coingecko_base_url}/search",
+                params={"query": symbol},
+                timeout=10.0,
+            )
+            if search.status_code != 200:
+                return {}
 
-        coins = search.json().get("coins") or []
-        if not coins:
-            return {}
+            coins = search.json().get("coins") or []
+            if not coins:
+                return {}
 
-        coin_id = coins[0].get("id")
-        if not coin_id:
-            return {}
+            coin_id = coins[0].get("id")
+            if not coin_id:
+                return {}
 
-        resp = await client.get(
-            f"{settings.coingecko_base_url}/coins/{coin_id}",
-            params={
-                "localization": "false",
-                "tickers": "false",
-                "market_data": "true",
-                "community_data": "true",
-                "developer_data": "false",
-                "sparkline": "false",
-            },
-            timeout=10.0,
-        )
-        if resp.status_code != 200:
-            return {}
-        return resp.json()
+            resp = await client.get(
+                f"{settings.coingecko_base_url}/coins/{coin_id}",
+                params={
+                    "localization": "false",
+                    "tickers": "false",
+                    "market_data": "true",
+                    "community_data": "true",
+                    "developer_data": "false",
+                    "sparkline": "false",
+                },
+                timeout=10.0,
+            )
+            if resp.status_code != 200:
+                return {}
+            return resp.json()
+    except httpx.HTTPError as exc:
+        logger.warning("Coingecko request failed for symbol=%s: %s", symbol, exc)
+        return {}
 
 
 async def _dexscreener_market(query: str) -> dict:
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(
-            f"{settings.dexscreener_base_url}/search/",
-            params={"q": query},
-            timeout=10.0,
-        )
-        if resp.status_code != 200:
-            return {}
-        pairs = resp.json().get("pairs") or []
-        if not pairs:
-            return {}
-        best = max(pairs, key=lambda pair: float(pair.get("liquidity", {}).get("usd") or 0.0))
-        return best
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{settings.dexscreener_base_url}/search/",
+                params={"q": query},
+                timeout=10.0,
+            )
+            if resp.status_code != 200:
+                return {}
+            pairs = resp.json().get("pairs") or []
+            if not pairs:
+                return {}
+            best = max(pairs, key=lambda pair: float(pair.get("liquidity", {}).get("usd") or 0.0))
+            return best
+    except httpx.HTTPError as exc:
+        logger.warning("Dexscreener request failed for query=%s: %s", query, exc)
+        return {}
+
+
+def _to_float(value: object, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _risk_from_liquidity_volume(liquidity_usd: float, volume_24h_usd: float) -> str:
@@ -97,23 +115,23 @@ async def fetch_market_bundle(token: ResolvedToken) -> tuple[MarketBundle, dict]
 
     market_data = (coingecko.get("market_data") or {}) if coingecko else {}
 
-    price_usd = float(
+    price_usd = _to_float(
         (dexscreener.get("priceUsd") if dexscreener else None)
         or (market_data.get("current_price") or {}).get("usd")
         or 0.0
     )
-    change_24h_pct = float(
+    change_24h_pct = _to_float(
         (dexscreener.get("priceChange") or {}).get("h24")
         or (market_data.get("price_change_percentage_24h") or 0.0)
     )
-    volume_24h_usd = float(
+    volume_24h_usd = _to_float(
         (dexscreener.get("volume") or {}).get("h24")
         or (market_data.get("total_volume") or {}).get("usd")
         or 0.0
     )
-    liquidity_usd = float((dexscreener.get("liquidity") or {}).get("usd") or 0.0)
-    market_cap_usd = float((market_data.get("market_cap") or {}).get("usd") or 0.0)
-    fdv_usd = float(market_data.get("fully_diluted_valuation", {}).get("usd") or market_cap_usd or 0.0)
+    liquidity_usd = _to_float((dexscreener.get("liquidity") or {}).get("usd") or 0.0)
+    market_cap_usd = _to_float((market_data.get("market_cap") or {}).get("usd") or 0.0)
+    fdv_usd = _to_float(market_data.get("fully_diluted_valuation", {}).get("usd") or market_cap_usd or 0.0)
 
     holder_concentration_risk = "unknown"
     transfer_count = None

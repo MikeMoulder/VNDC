@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     )
     opengradient_model: str = "openai/gpt-4.1-2025-04-14"
     opengradient_settlement_mode: str = "SETTLE_BATCH"
+    opengradient_rpc_url: str = "https://ogevmdevnet.opengradient.ai"
+    opengradient_api_url: str = "https://sdk-devnet.opengradient.ai"
+    opengradient_contract_address: str = "0x8383C9bD7462F12Eb996DD02F78234C0421A6FaE"
+    opengradient_email: str = ""
+    opengradient_password: str = ""
     allow_mock_opengradient: bool = False
     opengradient_approval_amount: float = 5.0
     opengradient_enable_volatility_tool: bool = False
@@ -28,6 +33,11 @@ class Settings(BaseSettings):
     rate_limit_requests: int = 30
     rate_limit_window_seconds: int = 60
     cache_ttl_seconds: int = 120
+
+    @property
+    def frontend_origins(self) -> list[str]:
+        origins = [origin.strip() for origin in self.frontend_origin.split(",")]
+        return [origin for origin in origins if origin]
 
 
 settings = Settings()

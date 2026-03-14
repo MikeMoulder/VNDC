@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+import enum
+import inspect
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -39,6 +41,17 @@ class OpenGradientClient:
     def __init__(self) -> None:
         self.enabled = settings.opengradient_enabled
         self.allow_mock = settings.allow_mock_opengradient
+
+    @staticmethod
+    def _ensure_strenum_compat() -> None:
+        # Python <3.11 does not provide enum.StrEnum; some dependencies import it directly.
+        if hasattr(enum, "StrEnum"):
+            return
+
+        class _CompatStrEnum(str, enum.Enum):
+            pass
+
+        enum.StrEnum = _CompatStrEnum
 
     def _mock_llm(self, market_snapshot: dict[str, Any], time_horizon: str) -> LLMResult:
         change = float(market_snapshot.get("change_24h_pct") or 0.0)
@@ -131,6 +144,22 @@ class OpenGradientClient:
             return getattr(og.x402SettlementMode, mode_name)
         return og.x402SettlementMode.SETTLE_BATCH
 
+    def _resolve_model_cid(self, og: Any) -> str:
+        # Older SDK paths take a string model_cid, while newer paths use TEE_LLM enums.
+        requested = settings.opengradient_model.strip()
+        if "/" in requested:
+            return requested
+
+        try:
+            model_enum = self._resolve_model(og)
+            value = getattr(model_enum, "value", None)
+            if isinstance(value, str) and value:
+                return value
+        except Exception:
+            pass
+
+        return "openai/gpt-4.1-2025-04-14"
+
     def _parse_chat_output(self, content: Any) -> dict[str, Any]:
         if isinstance(content, dict):
             return content
@@ -170,6 +199,71 @@ class OpenGradientClient:
 
         return f"unknown-{uuid.uuid4().hex}"
 
+    def _ensure_opg_approval_if_supported(self, client: Any) -> None:
+        if OpenGradientClient._approval_done:
+            return
+
+        llm_obj = getattr(client, "llm", None)
+        ensure_fn = getattr(llm_obj, "ensure_opg_approval", None)
+        if callable(ensure_fn):
+            ensure_fn(opg_amount=settings.opengradient_approval_amount)
+            OpenGradientClient._approval_done = True
+
+    def _create_og_client(self, og: Any) -> Any:
+        if hasattr(og, "Client"):
+            client_ctor = og.Client
+            params = inspect.signature(client_ctor).parameters
+            kwargs: dict[str, Any] = {}
+
+            if "private_key" in params:
+                kwargs["private_key"] = settings.opengradient_private_key
+            if "rpc_url" in params:
+                kwargs["rpc_url"] = settings.opengradient_rpc_url
+            if "api_url" in params:
+                kwargs["api_url"] = settings.opengradient_api_url
+            if "contract_address" in params:
+                kwargs["contract_address"] = settings.opengradient_contract_address
+            if "email" in params and settings.opengradient_email:
+                kwargs["email"] = settings.opengradient_email
+            if "password" in params and settings.opengradient_password:
+                kwargs["password"] = settings.opengradient_password
+
+            return client_ctor(**kwargs)
+
+        if hasattr(og, "init"):
+            init_fn = og.init
+            params = inspect.signature(init_fn).parameters
+            kwargs: dict[str, Any] = {}
+
+            if "private_key" in params:
+                kwargs["private_key"] = settings.opengradient_private_key
+            if "rpc_url" in params:
+                kwargs["rpc_url"] = settings.opengradient_rpc_url
+            if "api_url" in params:
+                kwargs["api_url"] = settings.opengradient_api_url
+            if "contract_address" in params:
+                kwargs["contract_address"] = settings.opengradient_contract_address
+            if "email" in params and settings.opengradient_email:
+                kwargs["email"] = settings.opengradient_email
+            if "password" in params and settings.opengradient_password:
+                kwargs["password"] = settings.opengradient_password
+
+            required_missing = [
+                name
+                for name, param in params.items()
+                if param.default is inspect._empty and name not in kwargs
+            ]
+            if required_missing:
+                missing = ", ".join(required_missing)
+                raise ValueError(
+                    f"OpenGradient SDK init requires missing settings: {missing}. "
+                    "Set OPENGRADIENT_EMAIL/OPENGRADIENT_PASSWORD and retry."
+                )
+
+            return init_fn(**kwargs)
+
+        raise ValueError("No compatible OpenGradient client constructor found")
+
     def analyze(
         self,
         token_data: dict[str, Any],
@@ -203,23 +297,35 @@ class OpenGradientClient:
             return self._mock_llm(market_snapshot, time_horizon)
 
         try:
+            self._ensure_strenum_compat()
             import opengradient as og
 
-            client = og.Client(private_key=settings.opengradient_private_key)
-            if not OpenGradientClient._approval_done:
-                client.llm.ensure_opg_approval(opg_amount=settings.opengradient_approval_amount)
-                OpenGradientClient._approval_done = True
+            client = self._create_og_client(og)
+            self._ensure_opg_approval_if_supported(client)
 
-            response = client.llm.chat(
-                model=self._resolve_model(og),
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt},
-                ],
-                x402_settlement_mode=self._resolve_settlement_mode(og),
-                temperature=0,
-                max_tokens=1200,
-            )
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ]
+
+            if hasattr(client, "llm") and hasattr(client.llm, "chat"):
+                response = client.llm.chat(
+                    model=self._resolve_model(og),
+                    messages=messages,
+                    x402_settlement_mode=self._resolve_settlement_mode(og),
+                    temperature=0,
+                    max_tokens=1200,
+                )
+            elif hasattr(client, "llm_chat"):
+                response = client.llm_chat(
+                    model_cid=self._resolve_model_cid(og),
+                    messages=messages,
+                    x402_settlement_mode=self._resolve_settlement_mode(og),
+                    temperature=0,
+                    max_tokens=1200,
+                )
+            else:
+                raise ValueError("No compatible LLM chat interface found in OpenGradient SDK")
             chat_output = getattr(response, "chat_output", None) or {}
             content = chat_output.get("content") if isinstance(chat_output, dict) else None
             parsed = self._parse_chat_output(content)
@@ -235,6 +341,15 @@ class OpenGradientClient:
         except HTTPException:
             raise
         except Exception as exc:
+            exc_msg = str(exc)
+            if "event not found" in exc_msg.lower():
+                logger.warning(
+                    "OpenGradient LLM returned no result event. "
+                    "This is usually a transient devnet issue. "
+                    "Falling back to mock response. Details: %s",
+                    exc_msg,
+                )
+                return self._mock_llm(market_snapshot, time_horizon)
             if not self.allow_mock:
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
@@ -278,6 +393,7 @@ class OpenGradientClient:
             return self._unavailable(f"need ≥8 prices, got {len(normalized_series)}")
 
         try:
+            self._ensure_strenum_compat()
             import opengradient as og
             from opengradient.alphasense import ToolType, create_run_model_tool
             from pydantic import BaseModel, Field
@@ -288,7 +404,7 @@ class OpenGradientClient:
                 len(normalized_series),
             )
 
-            client = og.init(private_key=settings.opengradient_private_key)
+            client = self._create_og_client(og)
 
             class VolatilityInput(BaseModel):
                 price_series: list[float] = Field(
