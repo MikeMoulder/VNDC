@@ -48,18 +48,18 @@ export default function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10 md:py-12">
-      <div className="mb-10">
+      <div className="mb-12">
         <Link
           href="/"
-          className="mb-5 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3.5 py-2.5 text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+          className="btn-tertiary mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-h1">
           Recent <span className="gradient-text">Checks</span>
         </h1>
-        <p className="mt-2 text-slate-400">
+        <p className="mt-3 text-body">
           Browse your previously generated token reports
         </p>
       </div>
@@ -75,21 +75,21 @@ export default function HistoryPage() {
           className="glass-card p-12 text-center"
         >
           <Clock className="mx-auto h-12 w-12 text-slate-600" />
-          <p className="mt-4 text-lg font-medium text-slate-400">
+          <p className="mt-4 text-h3 text-secondary">
             No checks yet
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-body">
             Run a token check to see results here
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold transition-all hover:bg-white/15"
+            className="btn-primary mt-8"
           >
             Run Check
           </Link>
         </motion.div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {items.map((item, i) => (
             <motion.article
               key={`${item.proof.opengradient.receipt_id}-${item.proof.opengradient.timestamp}-${item.token.address}-${i}`}
@@ -100,45 +100,49 @@ export default function HistoryPage() {
             >
               <div className="flex flex-wrap items-center gap-3">
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-sm font-bold ${ratingColor(
-                    item.verdict.rating
-                  )}`}
+                  className={`badge ${
+                    item.verdict.rating === "BUY"
+                      ? "badge-success"
+                      : item.verdict.rating === "WATCH"
+                        ? "badge-warning"
+                        : "badge-danger"
+                  }`}
                 >
                   <RatingIcon rating={item.verdict.rating} />
                   {item.verdict.rating}
                 </span>
-                <h3 className="text-lg font-semibold tracking-tight">
+                <h3 className="text-h3">
                   {item.token.name}{" "}
-                  <span className="text-slate-400">({item.token.symbol})</span>
+                  <span className="text-secondary">({item.token.symbol})</span>
                 </h3>
-                <span className="rounded-lg bg-white/5 px-2 py-1 text-xs text-slate-400">
+                <span className="badge-primary">
                   {item.token.chain}
                 </span>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3.5 text-sm md:grid-cols-4">
-                <div className="rounded-lg bg-white/[0.03] p-2.5">
-                  <p className="text-xs text-slate-500">Confidence</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
+              <div className="mt-5 grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                <div className="rounded-lg bg-white/[0.03] p-3">
+                  <p className="text-label">Confidence</p>
+                  <p className="mt-2 font-semibold tabular-nums text-secondary">
                     {item.verdict.confidence_pct}%
                   </p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-2.5">
-                  <p className="text-xs text-slate-500">Risk</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
+                <div className="rounded-lg bg-white/[0.03] p-3">
+                  <p className="text-label">Risk</p>
+                  <p className="mt-2 font-semibold tabular-nums text-secondary">
                     {item.verdict.risk_score_0_100}/100
                   </p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-2.5">
-                  <p className="text-xs text-slate-500">Price</p>
-                  <p className="mt-0.5 font-semibold tabular-nums">
+                <div className="rounded-lg bg-white/[0.03] p-3">
+                  <p className="text-label">Price</p>
+                  <p className="mt-2 font-semibold tabular-nums text-secondary">
                     {dollars(item.market_snapshot.price_usd)}
                   </p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-2.5">
-                  <p className="text-xs text-slate-500">24h</p>
+                <div className="rounded-lg bg-white/[0.03] p-3">
+                  <p className="text-label">24h</p>
                   <p
-                    className={`mt-0.5 font-semibold tabular-nums ${
+                    className={`mt-2 font-semibold tabular-nums ${
                       item.market_snapshot.change_24h_pct >= 0
                         ? "text-emerald-400"
                         : "text-rose-400"
@@ -150,7 +154,7 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <p className="mt-3 truncate text-xs text-slate-500">
+              <p className="mt-4 truncate text-caption">
                 Receipt:{" "}
                 <code className="font-mono">
                   {item.proof.opengradient.receipt_id}

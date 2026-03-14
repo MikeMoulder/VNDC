@@ -133,12 +133,12 @@ export default function HomePage() {
               VNDC • OpenGradient-powered token research
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-4xl font-semibold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+            <h1 className="mx-auto max-w-4xl text-display-lg md:text-display-md">
               Smarter token checks,
               <span className="gradient-text"> explained clearly</span>
             </h1>
 
-            <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
+            <p className="mx-auto mt-8 max-w-2xl text-body-lg md:text-lg">
               Get a fast verdict with simple reasoning, market context, and
               verifiable proof in one clean view.
             </p>
@@ -146,14 +146,14 @@ export default function HomePage() {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
               <a
                 href="#analyze"
-                className="group inline-flex min-w-40 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 font-semibold transition-all hover:bg-white/15"
+                className="btn-primary group min-w-40"
               >
                 Analyze Token
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
               <Link
                 href="/history"
-                className="inline-flex min-w-40 items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/25 px-6 py-3.5 font-semibold text-slate-300 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10"
+                className="btn-secondary min-w-40"
               >
                 <History className="h-4 w-4" />
                 Past Checks
@@ -184,10 +184,10 @@ export default function HomePage() {
       <section id="features" className="scroll-mt-24 px-6 py-24 md:py-28">
         <div className="mx-auto max-w-6xl">
           <AnimatedSection className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">
+            <h2 className="text-h1">
               Why use this <span className="gradient-text">tool</span>?
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-slate-400">
+            <p className="mx-auto mt-4 max-w-xl text-body">
               It keeps token research focused, structured, and easy to review.
             </p>
           </AnimatedSection>
@@ -215,10 +215,10 @@ export default function HomePage() {
       <section id="how-it-works" className="scroll-mt-24 px-6 py-24 md:py-28">
         <div className="mx-auto max-w-6xl">
           <AnimatedSection className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">
+            <h2 className="text-h1">
               How It <span className="gradient-text">Works</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-slate-400">
+            <p className="mx-auto mt-4 max-w-xl text-body">
               Three quick steps to check any token.
             </p>
           </AnimatedSection>
@@ -230,10 +230,10 @@ export default function HomePage() {
                   <span className="mb-4 block text-5xl font-bold text-white/[0.05]">
                     {step.number}
                   </span>
-                  <h3 className="-mt-5 mb-3 text-xl font-semibold tracking-tight">
+                  <h3 className="text-h3 -mt-5 mb-3">
                     {step.title}
                   </h3>
-                  <p className="text-sm leading-6 text-slate-400">{step.description}</p>
+                  <p className="text-body">{step.description}</p>
                   {i < steps.length - 1 && (
                     <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-slate-700 lg:block">
                       <ArrowRight className="h-6 w-6" />
@@ -249,10 +249,10 @@ export default function HomePage() {
       <section id="details" className="scroll-mt-24 px-6 py-20 md:py-24">
         <div className="mx-auto max-w-6xl">
           <AnimatedSection className="text-center">
-            <h2 className="text-3xl font-bold md:text-4xl">
+            <h2 className="text-h1">
               Report <span className="gradient-text">Breakdown</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-slate-400">
+            <p className="mx-auto mt-4 max-w-xl text-body">
               Each report shows the plan, the risks, and the proof source.
             </p>
           </AnimatedSection>
@@ -282,10 +282,10 @@ export default function HomePage() {
           <AnimatedSection>
             <div className="glass-card p-8 md:p-10">
               <div className="mb-9 text-center">
-                <h2 className="text-2xl font-bold md:text-3xl">
+                <h2 className="text-h2 md:text-h1">
                   Start a <span className="gradient-text">New Check</span>
                 </h2>
-                <p className="mt-3 text-sm text-slate-400">
+                <p className="mt-3 text-body">
                   Enter a ticker, contract address, or DexScreener URL
                 </p>
               </div>
@@ -296,20 +296,20 @@ export default function HomePage() {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-black/25 py-4 pl-12 pr-4 text-base outline-none transition-all placeholder:text-slate-500 focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20"
+                    className="input-base pl-12"
                     placeholder="ETH, ARB, 0x..., or https://..."
                     required
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-slate-500">Quick picks:</span>
+                  <span className="text-caption">Quick picks:</span>
                   {quickTokens.map((token) => (
                     <button
                       key={token}
                       type="button"
                       onClick={() => setQuery(token)}
-                      className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-slate-300 transition-colors hover:bg-white/[0.08]"
+                      className="btn-tertiary text-xs"
                     >
                       {token}
                     </button>
@@ -318,7 +318,7 @@ export default function HomePage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2.5 block text-label">
                       Time Horizon
                     </label>
                     <select
@@ -326,7 +326,7 @@ export default function HomePage() {
                       onChange={(e) =>
                         setTimeHorizon(e.target.value as TimeHorizon)
                       }
-                      className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm outline-none transition-all focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20"
+                      className="select-base"
                     >
                       <option value="scalp">Short (minutes-hours)</option>
                       <option value="swing">Swing (days-weeks)</option>
@@ -334,7 +334,7 @@ export default function HomePage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2.5 block text-label">
                       Risk Profile
                     </label>
                     <select
@@ -342,7 +342,7 @@ export default function HomePage() {
                       onChange={(e) =>
                         setRiskProfile(e.target.value as RiskProfile)
                       }
-                      className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm outline-none transition-all focus:border-teal-400/50 focus:ring-2 focus:ring-teal-400/20"
+                      className="select-base"
                     >
                       <option value="conservative">Conservative</option>
                       <option value="balanced">Balanced</option>
@@ -354,7 +354,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={!query.trim()}
-                  className="mt-2 w-full rounded-xl border border-white/20 bg-white/10 py-4 font-semibold transition-all hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-primary mt-2 w-full"
                 >
                   Run Check
                 </button>

@@ -86,8 +86,8 @@ function VerdictContent() {
         animate={{ opacity: 1, y: 0 }}
         className="mx-auto max-w-2xl"
       >
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-8 text-center backdrop-blur-xl">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10">
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-8 text-center backdrop-blur-xl shadow-xl shadow-rose-500/10">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-rose-500/10">
             <span className="text-2xl">!</span>
           </div>
           <p className="text-lg font-semibold text-rose-400">
@@ -96,7 +96,7 @@ function VerdictContent() {
           <p className="mt-2 text-sm text-rose-300/70">{error}</p>
           <Link
             href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium transition-all hover:bg-white/10"
+            className="btn-secondary mt-6"
           >
             <ArrowLeft className="h-4 w-4" />
             Try Again
@@ -122,17 +122,17 @@ function VerdictContent() {
 export default function VerdictPage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10 md:py-12">
-      <div className="mb-8 flex flex-wrap items-center gap-3">
+      <div className="mb-10 flex flex-wrap items-center gap-2">
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-lg border border-white/10 px-3.5 py-2.5 text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+          className="btn-tertiary"
         >
           <ArrowLeft className="h-4 w-4" />
           New Search
         </Link>
         <Link
           href="/history"
-          className="flex items-center gap-2 rounded-lg border border-white/10 px-3.5 py-2.5 text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+          className="btn-tertiary"
         >
           <History className="h-4 w-4" />
           History

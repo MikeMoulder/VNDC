@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "VNDC — Token Verdicts with Proof",
+  title: "VNDC",
   description:
     "Get clear token verdicts, risk context, and proof receipts in one place.",
 };

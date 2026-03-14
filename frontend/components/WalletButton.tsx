@@ -42,7 +42,7 @@ export function WalletButton() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10"
+          className="btn-secondary gap-2.5"
         >
           <div className="h-2 w-2 rounded-full bg-emerald-400" />
           <span>{truncateAddress(address)}</span>
@@ -58,14 +58,14 @@ export function WalletButton() {
               transition={{ duration: 0.15 }}
               className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-xl"
             >
-              <div className="border-b border-white/5 p-3">
-                <p className="text-xs text-slate-400">Connected</p>
-                <p className="mt-1 font-mono text-sm">{truncateAddress(address)}</p>
+              <div className="border-b border-white/5 p-4">
+                <p className="text-label">Connected</p>
+                <p className="mt-2 font-mono text-sm text-secondary">{truncateAddress(address)}</p>
               </div>
-              <div className="p-1">
+              <div className="space-y-2 p-2">
                 <button
                   onClick={copyAddress}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                  className="btn-tertiary w-full justify-start text-secondary hover:text-white"
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-emerald-400" />
@@ -79,7 +79,7 @@ export function WalletButton() {
                     disconnect();
                     setShowDropdown(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-400 transition-colors hover:bg-white/5"
+                  className="btn-danger w-full justify-start"
                 >
                   <LogOut className="h-4 w-4" />
                   Disconnect
@@ -96,9 +96,9 @@ export function WalletButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setShowConnectors(!showConnectors)}
-        className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold transition-all hover:bg-white/15"
+        className="btn-primary gap-2"
       >
-        <Wallet className="h-4 w-4 text-teal-300" />
+        <Wallet className="h-4 w-4" />
         Connect Wallet
       </button>
 
@@ -111,13 +111,13 @@ export function WalletButton() {
             transition={{ duration: 0.15 }}
             className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-xl"
           >
-            <div className="border-b border-white/5 p-3">
-              <p className="text-sm font-medium">Connect Wallet</p>
-              <p className="mt-0.5 text-xs text-slate-400">
+            <div className="border-b border-white/5 p-4">
+              <p className="font-semibold text-white">Connect Wallet</p>
+              <p className="mt-1 text-sm text-slate-400">
                 Choose your preferred wallet
               </p>
             </div>
-            <div className="p-1">
+            <div className="space-y-2 p-2">
               {connectors.map((connector) => (
                 <button
                   key={connector.uid}
@@ -125,7 +125,7 @@ export function WalletButton() {
                     connect({ connector });
                     setShowConnectors(false);
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-white/5"
+                  className="btn-tertiary w-full justify-start gap-3"
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
                     <Wallet className="h-4 w-4" />

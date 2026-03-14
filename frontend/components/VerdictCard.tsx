@@ -87,25 +87,31 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       {/* Header */}
       <motion.div
         variants={stagger.item}
-        className={`glass-card p-7 shadow-xl ${config.glow}`}
+        className="glass-card-elevated p-8"
       >
         <div className="flex flex-wrap items-start gap-4">
           <div
-            className={`flex items-center gap-2 rounded-xl border ${config.border} ${config.bg} px-4 py-2`}
+            className={`badge ${
+              verdict.verdict.rating === "BUY"
+                ? "badge-success"
+                : verdict.verdict.rating === "WATCH"
+                  ? "badge-warning"
+                  : "badge-danger"
+            }`}
           >
-            <RatingIcon className={`h-5 w-5 ${config.color}`} />
-            <span className={`text-xl font-bold ${config.color}`}>
+            <RatingIcon className="h-5 w-5" />
+            <span className="text-lg font-bold">
               {verdict.verdict.rating}
             </span>
           </div>
           <div className="min-w-0">
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h2 className="text-h2 md:text-h1">
               {verdict.token.name}{" "}
-              <span className="text-slate-400">({verdict.token.symbol})</span>
+              <span className="text-secondary">({verdict.token.symbol})</span>
             </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-2.5 text-sm text-slate-400">
+            <div className="mt-2 flex flex-wrap items-center gap-2.5 text-sm text-secondary">
               <span>{verdict.token.chain}</span>
-              <span className="font-mono text-xs">
+              <span className="font-mono text-xs text-muted">
                 {verdict.token.address.slice(0, 10)}...
               </span>
               {verdict.token.links.dexscreener && (
@@ -113,7 +119,7 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
                   href={verdict.token.links.dexscreener}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-teal-300 hover:underline"
+                  className="text-teal-300 hover:text-teal-200 transition-colors"
                 >
                   DexScreener
                 </a>
@@ -123,49 +129,41 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
         </div>
 
         {/* Quick stats */}
-        <div className="mt-7 grid grid-cols-2 gap-3.5 md:grid-cols-4">
-          <div className="rounded-xl bg-white/[0.03] p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Confidence
-            </p>
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="rounded-xl bg-white/[0.03] p-4">
+            <p className="text-label">Confidence</p>
             <p
-              className={`mt-1 text-2xl font-bold tabular-nums ${confidenceColor(
+              className={`mt-2 text-2xl font-bold tabular-nums ${confidenceColor(
                 verdict.verdict.confidence_pct
               )}`}
             >
               {verdict.verdict.confidence_pct}%
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Risk Score
-            </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">
+          <div className="rounded-xl bg-white/[0.03] p-4">
+            <p className="text-label">Risk Score</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums">
               {verdict.verdict.risk_score_0_100}
             </p>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-white/10">
+            <div className="mt-3 h-2 w-full rounded-full bg-white/10">
               <div
-                className={`h-1.5 rounded-full transition-all ${riskColor(
+                className={`h-2 rounded-full transition-all ${riskColor(
                   verdict.verdict.risk_score_0_100
                 )}`}
                 style={{ width: `${verdict.verdict.risk_score_0_100}%` }}
               />
             </div>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Price
-            </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">
+          <div className="rounded-xl bg-white/[0.03] p-4">
+            <p className="text-label">Price</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums">
               {dollars(verdict.market_snapshot.price_usd)}
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4 text-center">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              24h Change
-            </p>
+          <div className="rounded-xl bg-white/[0.03] p-4">
+            <p className="text-label">24h Change</p>
             <p
-              className={`mt-1 text-2xl font-bold tabular-nums ${
+              className={`mt-2 text-2xl font-bold tabular-nums ${
                 verdict.market_snapshot.change_24h_pct >= 0
                   ? "text-emerald-400"
                   : "text-rose-400"
@@ -179,48 +177,42 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       </motion.div>
 
       {/* Action Plan */}
-      <motion.div variants={stagger.item} className="glass-card p-7">
-        <div className="mb-4 flex items-center gap-2">
-          <Target className="h-5 w-5 text-teal-300" />
-          <h3 className="text-lg font-semibold">Trade Plan</h3>
+      <motion.div variants={stagger.item} className="glass-card p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-400/10">
+            <Target className="h-5 w-5 text-teal-300" />
+          </div>
+          <h3 className="text-h3">Trade Plan</h3>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Entry Zone
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl bg-white/[0.03] p-5">
+            <p className="text-label">Entry Zone</p>
+            <p className="mt-3 text-body">
               {verdict.verdict.action_plan.entry_zone}
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Invalidation
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+          <div className="rounded-xl bg-white/[0.03] p-5">
+            <p className="text-label">Invalidation</p>
+            <p className="mt-3 text-body">
               {verdict.verdict.action_plan.invalidation}
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Take Profit Targets
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <div className="rounded-xl bg-white/[0.03] p-5">
+            <p className="text-label">Take Profit Targets</p>
+            <div className="mt-3 flex flex-wrap gap-2">
               {verdict.verdict.action_plan.take_profit_targets.map((tp, i) => (
                 <span
                   key={i}
-                  className="rounded-lg bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-400"
+                  className="badge-success"
                 >
                   {tp}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Position Sizing
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-200">
+          <div className="rounded-xl bg-white/[0.03] p-5">
+            <p className="text-label">Position Sizing</p>
+            <p className="mt-3 text-body">
               {verdict.verdict.action_plan.position_sizing_note}
             </p>
           </div>
@@ -228,31 +220,35 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       </motion.div>
 
       {/* Key Reasons & Red Flags */}
-      <div className="grid gap-7 md:grid-cols-2">
-        <motion.div variants={stagger.item} className="glass-card p-7">
-          <div className="mb-4 flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-emerald-400" />
-            <h3 className="text-lg font-semibold">Why This Rating</h3>
+      <div className="grid gap-6 md:grid-cols-2">
+        <motion.div variants={stagger.item} className="glass-card p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-400/10">
+              <CheckCircle className="h-5 w-5 text-emerald-400" />
+            </div>
+            <h3 className="text-h3">Why This Rating</h3>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {verdict.verdict.key_reasons.map((reason, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-6 text-slate-300">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+              <li key={i} className="flex gap-3 text-body leading-relaxed">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
                 {reason}
               </li>
             ))}
           </ul>
         </motion.div>
 
-        <motion.div variants={stagger.item} className="glass-card p-7">
-          <div className="mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-400" />
-            <h3 className="text-lg font-semibold">Red Flags</h3>
+        <motion.div variants={stagger.item} className="glass-card p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-400/10">
+              <AlertTriangle className="h-5 w-5 text-amber-400" />
+            </div>
+            <h3 className="text-h3">Red Flags</h3>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {verdict.verdict.red_flags.map((flag, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-6 text-slate-300">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+              <li key={i} className="flex gap-3 text-body leading-relaxed">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
                 {flag}
               </li>
             ))}
@@ -261,12 +257,14 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       </div>
 
       {/* Market Snapshot */}
-      <motion.div variants={stagger.item} className="glass-card p-7">
-        <div className="mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-blue-400" />
-          <h3 className="text-lg font-semibold">Market Data</h3>
+      <motion.div variants={stagger.item} className="glass-card p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-400/10">
+            <BarChart3 className="h-5 w-5 text-blue-400" />
+          </div>
+          <h3 className="text-h3">Market Data</h3>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           {[
             {
               label: "Volume 24h",
@@ -287,9 +285,9 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
               value: verdict.signals.liquidity_risk,
             },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl bg-white/[0.03] p-3">
-              <p className="text-xs text-slate-500">{item.label}</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-slate-200">
+            <div key={item.label} className="rounded-xl bg-white/[0.03] p-4">
+              <p className="text-label">{item.label}</p>
+              <p className="mt-2 text-sm font-semibold capitalize text-secondary">
                 {item.value}
               </p>
             </div>
@@ -305,7 +303,7 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
       {/* Disclaimer */}
       <motion.p
         variants={stagger.item}
-        className="text-center text-xs text-slate-500"
+        className="text-center text-caption"
       >
         {verdict.disclaimer}
       </motion.p>
