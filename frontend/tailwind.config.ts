@@ -9,37 +9,40 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
+      },
+      colors: {
+        surface: {
+          0: "#06060a",
+          1: "#0c0c12",
+          2: "#131320",
+          3: "#1a1a2e",
+        },
       },
       animation: {
-        gradient: "gradient 8s ease infinite",
+        "fade-in": "fade-in 0.6s ease-out",
+        "slide-up": "slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
         float: "float 6s ease-in-out infinite",
-        "float-delayed": "float 6s ease-in-out 2s infinite",
-        "float-slow": "float 8s ease-in-out 4s infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "slide-up": "slide-up 0.6s ease-out",
-        "fade-in": "fade-in 0.5s ease-out",
+        "float-delayed": "float 6s ease-in-out 3s infinite",
+        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
       },
       keyframes: {
-        gradient: {
-          "0%, 100%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-20px)" },
-        },
-        "pulse-glow": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
         "slide-up": {
-          "0%": { transform: "translateY(20px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" },
+          from: { opacity: "0", transform: "translateY(24px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
-        "fade-in": {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.8" },
         },
       },
     },

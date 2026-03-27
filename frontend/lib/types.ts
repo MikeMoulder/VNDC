@@ -5,7 +5,6 @@ export interface VerdictRequest {
   query: string;
   time_horizon: TimeHorizon;
   risk_profile: RiskProfile;
-  wallet_address?: string;
 }
 
 export interface VerdictResponse {

@@ -5,21 +5,21 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
 export async function fetchVerdict(
   payload: VerdictRequest
 ): Promise<VerdictResponse> {
-  const body: Record<string, unknown> = {
-    query: payload.query,
-    time_horizon: payload.time_horizon,
-    risk_profile: payload.risk_profile,
-  };
-  if (payload.wallet_address) {
-    body.wallet_address = payload.wallet_address;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}/api/verdict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: payload.query,
+        time_horizon: payload.time_horizon,
+        risk_profile: payload.risk_profile,
+      }),
+      cache: "no-store",
+    });
+  } catch {
+    throw new Error(`Cannot reach API at ${API_BASE}. Ensure backend is running.`);
   }
-
-  const response = await fetch(`${API_BASE}/api/verdict`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
 
   if (!response.ok) {
     const text = await response.text();
@@ -30,7 +30,12 @@ export async function fetchVerdict(
 }
 
 export async function fetchHistory(): Promise<VerdictResponse[]> {
-  const resp = await fetch(`${API_BASE}/api/history`, { cache: "no-store" });
+  let resp: Response;
+  try {
+    resp = await fetch(`${API_BASE}/api/history`, { cache: "no-store" });
+  } catch {
+    throw new Error(`Cannot reach API at ${API_BASE}. Ensure backend is running.`);
+  }
   if (!resp.ok) return [];
   return resp.json();
 }

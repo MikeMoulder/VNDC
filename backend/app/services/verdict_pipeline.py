@@ -53,7 +53,7 @@ async def generate_verdict(request: VerdictRequest) -> VerdictResponse:
     }
 
     opg = OpenGradientClient()
-    llm_result = opg.analyze(
+    llm_result = await opg.analyze(
         token_data=token_dict,
         market_snapshot=market_snapshot_dict,
         derived_metrics={

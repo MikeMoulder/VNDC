@@ -14,18 +14,16 @@ import {
 import { type VerdictResponse } from "@/lib/types";
 import { fetchHistory } from "@/lib/api";
 
-function ratingColor(rating: string) {
-  if (rating === "BUY")
-    return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
-  if (rating === "WATCH")
-    return "text-amber-400 bg-amber-400/10 border-amber-400/20";
-  return "text-rose-400 bg-rose-400/10 border-rose-400/20";
+function RatingIcon({ rating }: { rating: string }) {
+  if (rating === "BUY") return <TrendingUp className="h-3.5 w-3.5" />;
+  if (rating === "WATCH") return <Minus className="h-3.5 w-3.5" />;
+  return <TrendingDown className="h-3.5 w-3.5" />;
 }
 
-function RatingIcon({ rating }: { rating: string }) {
-  if (rating === "BUY") return <TrendingUp className="h-4 w-4" />;
-  if (rating === "WATCH") return <Minus className="h-4 w-4" />;
-  return <TrendingDown className="h-4 w-4" />;
+function ratingStyles(rating: string) {
+  if (rating === "BUY") return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  if (rating === "WATCH") return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  return "text-red-400 bg-red-500/10 border-red-500/20";
 }
 
 function dollars(value: number) {
@@ -47,116 +45,90 @@ export default function HistoryPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 md:py-12">
-      <div className="mb-12">
+    <div className="noise mx-auto max-w-5xl px-5 py-8 md:py-10">
+      <div className="mb-10">
         <Link
           href="/"
-          className="btn-tertiary mb-6"
+          className="mb-5 inline-flex items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2 text-sm font-medium text-zinc-500 transition-all hover:text-zinc-200"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back
         </Link>
-        <h1 className="text-h1">
-          Recent <span className="gradient-text">Checks</span>
+        <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+          Recent <span className="text-gradient">Verdicts</span>
         </h1>
-        <p className="mt-3 text-body">
-          Browse your previously generated token reports
+        <p className="mt-3 text-sm text-zinc-500">
+          Browse previously generated token reports
         </p>
       </div>
 
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-300" />
+          <Loader2 className="h-7 w-7 animate-spin text-violet-400" />
         </div>
       ) : items.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="glass-card p-12 text-center"
+          className="rounded-2xl border border-white/[0.06] bg-surface-1 p-14 text-center"
         >
-          <Clock className="mx-auto h-12 w-12 text-slate-600" />
-          <p className="mt-4 text-h3 text-secondary">
-            No checks yet
-          </p>
-          <p className="mt-2 text-body">
-            Run a token check to see results here
-          </p>
+          <Clock className="mx-auto h-11 w-11 text-zinc-700" />
+          <p className="mt-5 text-lg font-bold text-zinc-300">No verdicts yet</p>
+          <p className="mt-2 text-sm text-zinc-500">Run an analysis to see results here</p>
           <Link
             href="/"
-            className="btn-primary mt-8"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition-all hover:brightness-110"
           >
-            Run Check
+            Run Analysis
           </Link>
         </motion.div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {items.map((item, i) => (
             <motion.article
               key={`${item.proof.opengradient.receipt_id}-${item.proof.opengradient.timestamp}-${item.token.address}-${i}`}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.4 }}
-              className="glass-card-hover p-6 md:p-7"
+              transition={{ delay: i * 0.04, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="hover-glow rounded-2xl border border-white/[0.06] bg-surface-1 p-6 transition-all hover:border-white/[0.1] md:p-7"
             >
-              <div className="flex flex-wrap items-center gap-3">
-                <span
-                  className={`badge ${item.verdict.rating === "BUY"
-                      ? "badge-success"
-                      : item.verdict.rating === "WATCH"
-                        ? "badge-warning"
-                        : "badge-danger"
-                    }`}
-                >
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-black ${ratingStyles(item.verdict.rating)}`}>
                   <RatingIcon rating={item.verdict.rating} />
                   {item.verdict.rating}
                 </span>
-                <h3 className="text-h3">
+                <h3 className="text-base font-bold">
                   {item.token.name}{" "}
-                  <span className="text-secondary">({item.token.symbol})</span>
+                  <span className="text-zinc-500">({item.token.symbol})</span>
                 </h3>
-                <span className="badge-primary">
+                <span className="rounded-lg bg-violet-500/10 px-2.5 py-1 text-[11px] font-bold text-violet-400">
                   {item.token.chain}
                 </span>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                <div className="rounded-lg bg-white/[0.03] p-3">
-                  <p className="text-label">Confidence</p>
-                  <p className="mt-2 font-semibold tabular-nums text-secondary">
-                    {item.verdict.confidence_pct}%
-                  </p>
+              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Confidence</p>
+                  <p className="mt-1.5 text-lg font-black tabular-nums text-zinc-200">{item.verdict.confidence_pct}%</p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-3">
-                  <p className="text-label">Risk</p>
-                  <p className="mt-2 font-semibold tabular-nums text-secondary">
-                    {item.verdict.risk_score_0_100}/100
-                  </p>
+                <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Risk</p>
+                  <p className="mt-1.5 text-lg font-black tabular-nums text-zinc-200">{item.verdict.risk_score_0_100}/100</p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-3">
-                  <p className="text-label">Price</p>
-                  <p className="mt-2 font-semibold tabular-nums text-secondary">
-                    {dollars(item.market_snapshot.price_usd)}
-                  </p>
+                <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Price</p>
+                  <p className="mt-1.5 text-lg font-black tabular-nums text-zinc-200">{dollars(item.market_snapshot.price_usd)}</p>
                 </div>
-                <div className="rounded-lg bg-white/[0.03] p-3">
-                  <p className="text-label">24h</p>
-                  <p
-                    className={`mt-2 font-semibold tabular-nums ${item.market_snapshot.change_24h_pct >= 0
-                        ? "text-emerald-400"
-                        : "text-rose-400"
-                      }`}
-                  >
-                    {item.market_snapshot.change_24h_pct >= 0 ? "+" : ""}
-                    {item.market_snapshot.change_24h_pct.toFixed(2)}%
+                <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-3.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">24h</p>
+                  <p className={`mt-1.5 text-lg font-black tabular-nums ${item.market_snapshot.change_24h_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    {item.market_snapshot.change_24h_pct >= 0 ? "+" : ""}{item.market_snapshot.change_24h_pct.toFixed(2)}%
                   </p>
                 </div>
               </div>
 
-              <p className="mt-4 truncate text-caption">
-                Receipt:{" "}
-                <code className="font-mono">
-                  {item.proof.opengradient.receipt_id}
-                </code>
+              <p className="mt-4 truncate text-[11px] text-zinc-600">
+                Receipt: <code className="font-mono text-zinc-500">{item.proof.opengradient.receipt_id}</code>
               </p>
             </motion.article>
           ))}

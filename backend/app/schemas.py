@@ -11,7 +11,14 @@ LowMediumHigh = Literal["low", "medium", "high"]
 LowMediumHighUnknown = Literal["low", "medium", "high", "unknown"]
 VolumeTrend = Literal["up", "down", "flat", "unknown"]
 Sentiment = Literal["bullish", "neutral", "bearish", "unknown"]
-SettlementMode = Literal["SETTLE", "SETTLE_BATCH", "SETTLE_METADATA"]
+SettlementMode = Literal[
+    "PRIVATE",
+    "BATCH_HASHED",
+    "INDIVIDUAL_FULL",
+    "SETTLE",
+    "SETTLE_BATCH",
+    "SETTLE_METADATA",
+]
 
 
 class VerdictRequest(BaseModel):

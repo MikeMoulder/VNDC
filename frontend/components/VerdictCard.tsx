@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Target,
   BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 import { VerdictResponse } from "@/lib/types";
 import { ProofDrawer } from "@/components/ProofDrawer";
@@ -17,25 +19,28 @@ function ratingConfig(rating: VerdictResponse["verdict"]["rating"]) {
   if (rating === "BUY")
     return {
       color: "text-emerald-400",
-      bg: "bg-emerald-400/10",
-      border: "border-emerald-400/20",
-      icon: TrendingUp,
+      bg: "from-emerald-500/20 to-emerald-500/5",
+      border: "border-emerald-500/20",
       glow: "shadow-emerald-500/10",
+      icon: TrendingUp,
+      label: "BUY",
     };
   if (rating === "WATCH")
     return {
       color: "text-amber-400",
-      bg: "bg-amber-400/10",
-      border: "border-amber-400/20",
-      icon: Minus,
+      bg: "from-amber-500/20 to-amber-500/5",
+      border: "border-amber-500/20",
       glow: "shadow-amber-500/10",
+      icon: Minus,
+      label: "WATCH",
     };
   return {
-    color: "text-rose-400",
-    bg: "bg-rose-400/10",
-    border: "border-rose-400/20",
+    color: "text-red-400",
+    bg: "from-red-500/20 to-red-500/5",
+    border: "border-red-500/20",
+    glow: "shadow-red-500/10",
     icon: TrendingDown,
-    glow: "shadow-rose-500/10",
+    label: "AVOID",
   };
 }
 
@@ -53,64 +58,63 @@ function dollars(value: number) {
 function confidenceColor(pct: number) {
   if (pct >= 75) return "text-emerald-400";
   if (pct >= 50) return "text-amber-400";
-  return "text-rose-400";
+  return "text-red-400";
 }
 
-function riskColor(score: number) {
-  if (score <= 33) return "bg-emerald-400";
-  if (score <= 66) return "bg-amber-400";
-  return "bg-rose-400";
+function riskBarColor(score: number) {
+  if (score <= 33) return "bg-emerald-500";
+  if (score <= 66) return "bg-amber-500";
+  return "bg-red-500";
 }
 
 const stagger = {
   container: {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.08 } },
+    visible: { transition: { staggerChildren: 0.07 } },
   },
   item: {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
   },
 };
 
 export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
   const config = ratingConfig(verdict.verdict.rating);
   const RatingIcon = config.icon;
+  const positive = verdict.market_snapshot.change_24h_pct >= 0;
 
   return (
     <motion.article
       variants={stagger.container}
       initial="hidden"
       animate="visible"
-      className="space-y-6 md:space-y-7"
+      className="space-y-4"
     >
-      {/* Header */}
+      {/* ===== HEADER CARD ===== */}
       <motion.div
         variants={stagger.item}
-        className="glass-card-elevated p-8"
+        className={`relative overflow-hidden rounded-2xl border border-white/[0.06] bg-surface-1 p-7 shadow-2xl ${config.glow} md:p-8`}
       >
-        <div className="flex flex-wrap items-start gap-4">
-          <div
-            className={`badge ${verdict.verdict.rating === "BUY"
-                ? "badge-success"
-                : verdict.verdict.rating === "WATCH"
-                  ? "badge-warning"
-                  : "badge-danger"
-              }`}
-          >
-            <RatingIcon className="h-5 w-5" />
-            <span className="text-lg font-bold">
-              {verdict.verdict.rating}
-            </span>
+        {/* Ambient glow behind rating */}
+        <div className={`pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-gradient-to-br ${config.bg} blur-[100px] opacity-40`} />
+
+        <div className="relative flex flex-wrap items-start gap-4">
+          {/* Rating badge */}
+          <div className={`flex items-center gap-2 rounded-xl border bg-gradient-to-r px-4 py-2 ${config.bg} ${config.border}`}>
+            <RatingIcon className={`h-5 w-5 ${config.color}`} />
+            <span className={`text-lg font-black ${config.color}`}>{config.label}</span>
           </div>
+
           <div className="min-w-0">
-            <h2 className="text-h2 md:text-h1">
+            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">
               {verdict.token.name}{" "}
-              <span className="text-secondary">({verdict.token.symbol})</span>
+              <span className="text-zinc-500">({verdict.token.symbol})</span>
             </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2.5 text-sm text-secondary">
-              <span>{verdict.token.chain}</span>
-              <span className="font-mono text-xs text-muted">
+            <div className="mt-2 flex flex-wrap items-center gap-2.5 text-sm">
+              <span className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-xs font-medium capitalize text-zinc-400">
+                {verdict.token.chain}
+              </span>
+              <span className="font-mono text-xs text-zinc-600">
                 {verdict.token.address.slice(0, 10)}...
               </span>
               {verdict.token.links.dexscreener && (
@@ -118,7 +122,7 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
                   href={verdict.token.links.dexscreener}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-teal-300 hover:text-teal-200 transition-colors"
+                  className="text-xs text-violet-400 transition-colors hover:text-violet-300"
                 >
                   DexScreener
                 </a>
@@ -127,126 +131,113 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
           </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-label">Confidence</p>
-            <p
-              className={`mt-2 text-2xl font-bold tabular-nums ${confidenceColor(
-                verdict.verdict.confidence_pct
-              )}`}
-            >
-              {verdict.verdict.confidence_pct}%
+        {/* Stats strip */}
+        <div className="relative mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Confidence</p>
+            <p className={`mt-2 text-3xl font-black tabular-nums ${confidenceColor(verdict.verdict.confidence_pct)}`}>
+              {verdict.verdict.confidence_pct}
+              <span className="text-lg">%</span>
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-label">Risk Score</p>
-            <p className="mt-2 text-2xl font-bold tabular-nums">
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Risk</p>
+            <p className="mt-2 text-3xl font-black tabular-nums">
               {verdict.verdict.risk_score_0_100}
             </p>
-            <div className="mt-3 h-2 w-full rounded-full bg-white/10">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.04]">
               <div
-                className={`h-2 rounded-full transition-all ${riskColor(
-                  verdict.verdict.risk_score_0_100
-                )}`}
+                className={`h-full rounded-full transition-all ${riskBarColor(verdict.verdict.risk_score_0_100)}`}
                 style={{ width: `${verdict.verdict.risk_score_0_100}%` }}
               />
             </div>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-label">Price</p>
-            <p className="mt-2 text-2xl font-bold tabular-nums">
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Price</p>
+            <p className="mt-2 text-3xl font-black tabular-nums">
               {dollars(verdict.market_snapshot.price_usd)}
             </p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-4">
-            <p className="text-label">24h Change</p>
-            <p
-              className={`mt-2 text-2xl font-bold tabular-nums ${verdict.market_snapshot.change_24h_pct >= 0
-                  ? "text-emerald-400"
-                  : "text-rose-400"
-                }`}
-            >
-              {verdict.market_snapshot.change_24h_pct >= 0 ? "+" : ""}
-              {verdict.market_snapshot.change_24h_pct.toFixed(2)}%
-            </p>
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">24h</p>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <p className={`text-3xl font-black tabular-nums ${positive ? "text-emerald-400" : "text-red-400"}`}>
+                {positive ? "+" : ""}{verdict.market_snapshot.change_24h_pct.toFixed(2)}%
+              </p>
+              {positive ? (
+                <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4 text-red-500" />
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Action Plan */}
-      <motion.div variants={stagger.item} className="glass-card p-8">
+      {/* ===== ACTION PLAN ===== */}
+      <motion.div variants={stagger.item} className="rounded-2xl border border-white/[0.06] bg-surface-1 p-7 md:p-8">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-400/10">
-            <Target className="h-5 w-5 text-teal-300" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/10">
+            <Target className="h-5 w-5 text-violet-400" />
           </div>
-          <h3 className="text-h3">Trade Plan</h3>
+          <h3 className="text-lg font-bold tracking-tight">Trade Plan</h3>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl bg-white/[0.03] p-5">
-            <p className="text-label">Entry Zone</p>
-            <p className="mt-3 text-body">
-              {verdict.verdict.action_plan.entry_zone}
-            </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Entry Zone</p>
+            <p className="mt-2.5 text-sm font-medium text-zinc-200">{verdict.verdict.action_plan.entry_zone}</p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-5">
-            <p className="text-label">Invalidation</p>
-            <p className="mt-3 text-body">
-              {verdict.verdict.action_plan.invalidation}
-            </p>
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Invalidation</p>
+            <p className="mt-2.5 text-sm font-medium text-zinc-200">{verdict.verdict.action_plan.invalidation}</p>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-5">
-            <p className="text-label">Take Profit Targets</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Take Profit</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
               {verdict.verdict.action_plan.take_profit_targets.map((tp, i) => (
-                <span
-                  key={i}
-                  className="badge-success"
-                >
+                <span key={i} className="rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">
                   {tp}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl bg-white/[0.03] p-5">
-            <p className="text-label">Position Sizing</p>
-            <p className="mt-3 text-body">
-              {verdict.verdict.action_plan.position_sizing_note}
-            </p>
+          <div className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Position Note</p>
+            <p className="mt-2.5 text-sm font-medium text-zinc-200">{verdict.verdict.action_plan.position_sizing_note}</p>
           </div>
         </div>
       </motion.div>
 
-      {/* Key Reasons & Red Flags */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <motion.div variants={stagger.item} className="glass-card p-8">
+      {/* ===== REASONS & FLAGS ===== */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <motion.div variants={stagger.item} className="rounded-2xl border border-white/[0.06] bg-surface-1 p-7 md:p-8">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-400/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10">
               <CheckCircle className="h-5 w-5 text-emerald-400" />
             </div>
-            <h3 className="text-h3">Why This Rating</h3>
+            <h3 className="text-lg font-bold tracking-tight">Bull Case</h3>
           </div>
-          <ul className="space-y-4">
+          <ul className="space-y-3.5">
             {verdict.verdict.key_reasons.map((reason, i) => (
-              <li key={i} className="flex gap-3 text-body leading-relaxed">
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+              <li key={i} className="flex gap-3 text-sm leading-relaxed text-zinc-300">
+                <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
                 {reason}
               </li>
             ))}
           </ul>
         </motion.div>
 
-        <motion.div variants={stagger.item} className="glass-card p-8">
+        <motion.div variants={stagger.item} className="rounded-2xl border border-white/[0.06] bg-surface-1 p-7 md:p-8">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-400/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
               <AlertTriangle className="h-5 w-5 text-amber-400" />
             </div>
-            <h3 className="text-h3">Red Flags</h3>
+            <h3 className="text-lg font-bold tracking-tight">Red Flags</h3>
           </div>
-          <ul className="space-y-4">
+          <ul className="space-y-3.5">
             {verdict.verdict.red_flags.map((flag, i) => (
-              <li key={i} className="flex gap-3 text-body leading-relaxed">
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
+              <li key={i} className="flex gap-3 text-sm leading-relaxed text-zinc-300">
+                <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
                 {flag}
               </li>
             ))}
@@ -254,55 +245,38 @@ export function VerdictCard({ verdict }: { verdict: VerdictResponse }) {
         </motion.div>
       </div>
 
-      {/* Market Snapshot */}
-      <motion.div variants={stagger.item} className="glass-card p-8">
+      {/* ===== MARKET DATA ===== */}
+      <motion.div variants={stagger.item} className="rounded-2xl border border-white/[0.06] bg-surface-1 p-7 md:p-8">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-400/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10">
             <BarChart3 className="h-5 w-5 text-blue-400" />
           </div>
-          <h3 className="text-h3">Market Data</h3>
+          <h3 className="text-lg font-bold tracking-tight">Market Snapshot</h3>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {[
-            {
-              label: "Volume 24h",
-              value: dollars(verdict.market_snapshot.volume_24h_usd),
-            },
-            {
-              label: "Liquidity",
-              value: dollars(verdict.market_snapshot.liquidity_usd),
-            },
-            {
-              label: "Market Cap",
-              value: dollars(verdict.market_snapshot.market_cap_usd),
-            },
+            { label: "Volume 24h", value: dollars(verdict.market_snapshot.volume_24h_usd) },
+            { label: "Liquidity", value: dollars(verdict.market_snapshot.liquidity_usd) },
+            { label: "Market Cap", value: dollars(verdict.market_snapshot.market_cap_usd) },
             { label: "FDV", value: dollars(verdict.market_snapshot.fdv_usd) },
             { label: "Sentiment", value: verdict.signals.sentiment },
-            {
-              label: "Liquidity Risk",
-              value: verdict.signals.liquidity_risk,
-            },
+            { label: "Liquidity Risk", value: verdict.signals.liquidity_risk },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl bg-white/[0.03] p-4">
-              <p className="text-label">{item.label}</p>
-              <p className="mt-2 text-sm font-semibold capitalize text-secondary">
-                {item.value}
-              </p>
+            <div key={item.label} className="rounded-xl border border-white/[0.04] bg-surface-0/60 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">{item.label}</p>
+              <p className="mt-2 text-sm font-bold capitalize text-zinc-200">{item.value}</p>
             </div>
           ))}
         </div>
       </motion.div>
 
-      {/* Proof */}
+      {/* ===== PROOF ===== */}
       <motion.div variants={stagger.item}>
         <ProofDrawer verdict={verdict} />
       </motion.div>
 
       {/* Disclaimer */}
-      <motion.p
-        variants={stagger.item}
-        className="text-center text-caption"
-      >
+      <motion.p variants={stagger.item} className="text-center text-xs text-zinc-600">
         {verdict.disclaimer}
       </motion.p>
     </motion.article>

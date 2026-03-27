@@ -62,7 +62,7 @@ response = client.llm.chat(
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_prompt},
     ],
-  x402_settlement_mode=og.x402SettlementMode.SETTLE_BATCH,
+  x402_settlement_mode=og.x402SettlementMode.BATCH_HASHED,
     temperature=0,
 )
 
@@ -73,7 +73,7 @@ content = response.chat_output["content"]
 Environment flags:
 - `OPENGRADIENT_ENABLED=true`
 - `OG_PRIVATE_KEY=...`
-- `OPENGRADIENT_SETTLEMENT_MODE=SETTLE_BATCH`
+- `OPENGRADIENT_SETTLEMENT_MODE=BATCH_HASHED`
 - `OPENGRADIENT_ENABLE_VOLATILITY_TOOL=true` (enables on-chain ONNX tool call)
 - `OPENGRADIENT_VOLATILITY_MODEL_CID=hJD2Ja3akZFt1A2LT-D_1oxOCz_OtuGYw4V9eE1m39M`
 - `ALLOW_MOCK_OPENGRADIENT=false` (set true only for local fallback)
@@ -220,7 +220,7 @@ If volatility is unavailable, set source to unavailable and tx_hash to null.
   },
   "proof": {
     "opengradient": {
-      "settlement_mode": "SETTLE_BATCH",
+      "settlement_mode": "BATCH_HASHED",
       "receipt_id": "0xreceipt...",
       "model": "meta-llama/Llama-3.3-70B-Instruct",
       "timestamp": "2026-02-28T12:34:56Z"
@@ -236,7 +236,7 @@ If volatility is unavailable, set source to unavailable and tx_hash to null.
 ### Backend
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 # Windows
 .\.venv\Scripts\activate
 pip install -r requirements.txt

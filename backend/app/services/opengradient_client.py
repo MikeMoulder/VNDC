@@ -40,7 +40,9 @@ class OpenGradientClient:
 
     def __init__(self) -> None:
         self.enabled = settings.opengradient_enabled
-        self.allow_mock = settings.allow_mock_opengradient
+        # In non-production environments, default to graceful mock fallback
+        # unless explicitly disabled via ALLOW_MOCK_OPENGRADIENT.
+        self.allow_mock = settings.allow_mock_opengradient or settings.environment.lower() != "production"
 
     @staticmethod
     def _ensure_strenum_compat() -> None:
@@ -140,9 +142,49 @@ class OpenGradientClient:
 
     def _resolve_settlement_mode(self, og: Any) -> Any:
         mode_name = settings.opengradient_settlement_mode.upper().strip()
-        if hasattr(og.x402SettlementMode, mode_name):
-            return getattr(og.x402SettlementMode, mode_name)
-        return og.x402SettlementMode.SETTLE_BATCH
+        aliases = {
+            "SETTLE_BATCH": "BATCH_HASHED",
+            "SETTLE_METADATA": "INDIVIDUAL_FULL",
+            "SETTLE": "INDIVIDUAL_FULL",
+        }
+
+        candidates = [mode_name]
+        if mode_name in aliases:
+            candidates.append(aliases[mode_name])
+
+        for candidate in candidates:
+            if hasattr(og.x402SettlementMode, candidate):
+                return getattr(og.x402SettlementMode, candidate)
+
+        if hasattr(og.x402SettlementMode, "BATCH_HASHED"):
+            return og.x402SettlementMode.BATCH_HASHED
+        if hasattr(og.x402SettlementMode, "SETTLE_BATCH"):
+            return og.x402SettlementMode.SETTLE_BATCH
+
+        raise ValueError("No compatible x402 settlement mode enum found in opengradient SDK")
+
+    def _resolve_private_settlement_mode(self, og: Any) -> Any | None:
+        for candidate in ("PRIVATE", "SETTLE_PRIVATE"):
+            if hasattr(og.x402SettlementMode, candidate):
+                return getattr(og.x402SettlementMode, candidate)
+        return None
+
+    def _fallback_settlement_modes(self, og: Any, primary_mode: Any) -> list[Any]:
+        candidates: list[Any] = []
+
+        private_mode = self._resolve_private_settlement_mode(og)
+        if private_mode is not None and private_mode != primary_mode:
+            candidates.append(private_mode)
+
+        # Legacy SDKs often expose SETTLE_* enums only; individual settlement can be
+        # more reliable than batch settlement when event indexing lags.
+        for candidate in ("SETTLE", "INDIVIDUAL_FULL", "SETTLE_METADATA"):
+            if hasattr(og.x402SettlementMode, candidate):
+                mode = getattr(og.x402SettlementMode, candidate)
+                if mode != primary_mode and mode not in candidates:
+                    candidates.append(mode)
+
+        return candidates
 
     def _resolve_model_cid(self, og: Any) -> str:
         # Older SDK paths take a string model_cid, while newer paths use TEE_LLM enums.
@@ -167,7 +209,54 @@ class OpenGradientClient:
             content = "".join(str(chunk) for chunk in content)
         if not isinstance(content, str) or not content.strip():
             raise ValueError("OpenGradient chat output is empty")
-        return json.loads(content)
+        normalized = content.strip()
+        try:
+            return json.loads(normalized)
+        except json.JSONDecodeError:
+            # Be resilient if the model wraps JSON with extra text.
+            start = normalized.find("{")
+            end = normalized.rfind("}")
+            if start >= 0 and end > start:
+                return json.loads(normalized[start : end + 1])
+            raise
+
+    def _extract_chat_content(self, response: Any) -> tuple[Any, str]:
+        chat_output = getattr(response, "chat_output", None)
+        if isinstance(chat_output, dict) and "content" in chat_output:
+            return chat_output.get("content"), "object.chat_output.content"
+
+        if isinstance(response, dict):
+            chat_output = response.get("chat_output") or {}
+            if isinstance(chat_output, dict) and "content" in chat_output:
+                return chat_output.get("content"), "dict.chat_output.content"
+
+            if "content" in response:
+                return response.get("content"), "dict.content"
+
+        choices = getattr(response, "choices", None)
+        if isinstance(choices, list) and choices:
+            first = choices[0]
+            message = getattr(first, "message", None)
+            if message is not None:
+                content = getattr(message, "content", None)
+                if content:
+                    return content, "object.choices[0].message.content"
+
+            if isinstance(first, dict):
+                message = first.get("message") or {}
+                if isinstance(message, dict) and message.get("content"):
+                    return message.get("content"), "dict.choices[0].message.content"
+
+        if hasattr(response, "completion_output"):
+            return getattr(response, "completion_output"), "object.completion_output"
+
+        if isinstance(response, dict):
+            if response.get("completion_output"):
+                return response.get("completion_output"), "dict.completion_output"
+            if isinstance(response.get("output"), dict) and response["output"].get("content"):
+                return response["output"]["content"], "dict.output.content"
+
+        return None, "not_found"
 
     def _extract_receipt_id(self, response: Any) -> str:
         candidates = [
@@ -203,11 +292,56 @@ class OpenGradientClient:
         if OpenGradientClient._approval_done:
             return
 
-        llm_obj = getattr(client, "llm", None)
-        ensure_fn = getattr(llm_obj, "ensure_opg_approval", None)
+        ensure_fn = getattr(client, "ensure_opg_approval", None)
+        if not callable(ensure_fn):
+            llm_obj = getattr(client, "llm", None)
+            ensure_fn = getattr(llm_obj, "ensure_opg_approval", None)
         if callable(ensure_fn):
             ensure_fn(opg_amount=settings.opengradient_approval_amount)
             OpenGradientClient._approval_done = True
+
+    @staticmethod
+    async def _resolve_maybe_async(result: Any) -> Any:
+        if inspect.isawaitable(result):
+            return await result
+        return result
+
+    def _create_llm_client(self, og: Any) -> Any | None:
+        if not hasattr(og, "LLM"):
+            return None
+
+        llm_ctor = og.LLM
+        if isinstance(llm_ctor, enum.EnumMeta):
+            # Older SDKs export LLM as a model enum, not a client constructor.
+            return None
+
+        params = inspect.signature(llm_ctor).parameters
+        kwargs: dict[str, Any] = {}
+
+        if "private_key" in params:
+            kwargs["private_key"] = settings.opengradient_private_key
+        if "rpc_url" in params and settings.opengradient_rpc_url:
+            kwargs["rpc_url"] = settings.opengradient_rpc_url
+        if "api_url" in params and settings.opengradient_api_url:
+            kwargs["api_url"] = settings.opengradient_api_url
+        if "contract_address" in params and settings.opengradient_contract_address:
+            kwargs["contract_address"] = settings.opengradient_contract_address
+
+        return llm_ctor(**kwargs)
+
+    async def _invoke_llm_chat(self, llm_client: Any, og: Any, messages: list[dict[str, str]], settlement_mode: Any) -> Any:
+        chat_fn = getattr(llm_client, "chat", None)
+        if not callable(chat_fn):
+            raise ValueError("No compatible LLM chat interface found in OpenGradient SDK")
+
+        result = chat_fn(
+            model=self._resolve_model(og),
+            messages=messages,
+            x402_settlement_mode=settlement_mode,
+            temperature=0,
+            max_tokens=1200,
+        )
+        return await self._resolve_maybe_async(result)
 
     def _create_og_client(self, og: Any) -> Any:
         if hasattr(og, "Client"):
@@ -264,7 +398,7 @@ class OpenGradientClient:
 
         raise ValueError("No compatible OpenGradient client constructor found")
 
-    def analyze(
+    async def analyze(
         self,
         token_data: dict[str, Any],
         market_snapshot: dict[str, Any],
@@ -300,34 +434,132 @@ class OpenGradientClient:
             self._ensure_strenum_compat()
             import opengradient as og
 
-            client = self._create_og_client(og)
-            self._ensure_opg_approval_if_supported(client)
-
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ]
 
-            if hasattr(client, "llm") and hasattr(client.llm, "chat"):
-                response = client.llm.chat(
-                    model=self._resolve_model(og),
-                    messages=messages,
-                    x402_settlement_mode=self._resolve_settlement_mode(og),
-                    temperature=0,
-                    max_tokens=1200,
-                )
-            elif hasattr(client, "llm_chat"):
-                response = client.llm_chat(
-                    model_cid=self._resolve_model_cid(og),
-                    messages=messages,
-                    x402_settlement_mode=self._resolve_settlement_mode(og),
-                    temperature=0,
-                    max_tokens=1200,
-                )
+            settlement_mode = self._resolve_settlement_mode(og)
+            settlement_mode_name = getattr(settlement_mode, "name", settings.opengradient_settlement_mode)
+            response = None
+
+            llm_client = self._create_llm_client(og)
+            if llm_client is not None:
+                self._ensure_opg_approval_if_supported(llm_client)
+                try:
+                    response = await self._invoke_llm_chat(llm_client, og, messages, settlement_mode)
+                except Exception as exc:
+                    exc_msg = str(exc)
+                    if "event not found" in exc_msg.lower():
+                        retry_modes = self._fallback_settlement_modes(og, settlement_mode)
+                        for retry_mode in retry_modes:
+                            retry_mode_name = getattr(retry_mode, "name", "unknown")
+                            logger.warning(
+                                "OpenGradient settlement result event not found with mode=%s. "
+                                "Retrying once with mode=%s. Details: %s",
+                                settlement_mode_name,
+                                retry_mode_name,
+                                exc_msg,
+                            )
+                            try:
+                                response = await self._invoke_llm_chat(llm_client, og, messages, retry_mode)
+                                settlement_mode_name = retry_mode_name
+                                break
+                            except Exception as retry_exc:
+                                exc_msg = str(retry_exc)
+                                if "event not found" not in exc_msg.lower():
+                                    raise
+                        if response is None:
+                            raise ValueError(exc_msg)
+                    else:
+                        raise
             else:
-                raise ValueError("No compatible LLM chat interface found in OpenGradient SDK")
-            chat_output = getattr(response, "chat_output", None) or {}
-            content = chat_output.get("content") if isinstance(chat_output, dict) else None
+                client = self._create_og_client(og)
+                self._ensure_opg_approval_if_supported(client)
+
+                if hasattr(client, "llm") and hasattr(client.llm, "chat"):
+                    async def _legacy_chat(mode: Any) -> Any:
+                        return await self._resolve_maybe_async(client.llm.chat(
+                            model=self._resolve_model(og),
+                            messages=messages,
+                            x402_settlement_mode=mode,
+                            temperature=0,
+                            max_tokens=1200,
+                        ))
+
+                    try:
+                        response = await _legacy_chat(settlement_mode)
+                    except Exception as exc:
+                        exc_msg = str(exc)
+                        if "event not found" in exc_msg.lower():
+                            retry_modes = self._fallback_settlement_modes(og, settlement_mode)
+                            for retry_mode in retry_modes:
+                                retry_mode_name = getattr(retry_mode, "name", "unknown")
+                                logger.warning(
+                                    "OpenGradient settlement result event not found with mode=%s. "
+                                    "Retrying once with mode=%s. Details: %s",
+                                    settlement_mode_name,
+                                    retry_mode_name,
+                                    exc_msg,
+                                )
+                                try:
+                                    response = await _legacy_chat(retry_mode)
+                                    settlement_mode_name = retry_mode_name
+                                    break
+                                except Exception as retry_exc:
+                                    exc_msg = str(retry_exc)
+                                    if "event not found" not in exc_msg.lower():
+                                        raise
+                            if response is None:
+                                raise ValueError(exc_msg)
+                        else:
+                            raise
+                elif hasattr(client, "llm_chat"):
+                    async def _legacy_llm_chat(mode: Any) -> Any:
+                        return await self._resolve_maybe_async(client.llm_chat(
+                            model_cid=self._resolve_model_cid(og),
+                            messages=messages,
+                            x402_settlement_mode=mode,
+                            temperature=0,
+                            max_tokens=1200,
+                        ))
+
+                    try:
+                        response = await _legacy_llm_chat(settlement_mode)
+                    except Exception as exc:
+                        exc_msg = str(exc)
+                        if "event not found" in exc_msg.lower():
+                            retry_modes = self._fallback_settlement_modes(og, settlement_mode)
+                            for retry_mode in retry_modes:
+                                retry_mode_name = getattr(retry_mode, "name", "unknown")
+                                logger.warning(
+                                    "OpenGradient settlement result event not found with mode=%s. "
+                                    "Retrying once with mode=%s. Details: %s",
+                                    settlement_mode_name,
+                                    retry_mode_name,
+                                    exc_msg,
+                                )
+                                try:
+                                    response = await _legacy_llm_chat(retry_mode)
+                                    settlement_mode_name = retry_mode_name
+                                    break
+                                except Exception as retry_exc:
+                                    exc_msg = str(retry_exc)
+                                    if "event not found" not in exc_msg.lower():
+                                        raise
+                            if response is None:
+                                raise ValueError(exc_msg)
+                        else:
+                            raise
+                else:
+                    raise ValueError("No compatible LLM chat interface found in OpenGradient SDK")
+
+            content, content_source = self._extract_chat_content(response)
+            logger.debug(
+                "OpenGradient chat content extraction path=%s response_type=%s",
+                content_source,
+                type(response).__name__,
+            )
             parsed = self._parse_chat_output(content)
             payment_hash = self._extract_receipt_id(response)
 
@@ -335,7 +567,7 @@ class OpenGradientClient:
                 payload=parsed,
                 receipt_id=payment_hash,
                 model=settings.opengradient_model,
-                settlement_mode=settings.opengradient_settlement_mode,
+                settlement_mode=settlement_mode_name,
                 timestamp=datetime.now(timezone.utc),
             )
         except HTTPException:
@@ -343,10 +575,18 @@ class OpenGradientClient:
         except Exception as exc:
             exc_msg = str(exc)
             if "event not found" in exc_msg.lower():
+                if not self.allow_mock:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=(
+                            "OpenGradient LLM returned no result event after retry. "
+                            f"Details: {exc_msg}"
+                        ),
+                    ) from exc
                 logger.warning(
-                    "OpenGradient LLM returned no result event. "
-                    "This is usually a transient devnet issue. "
-                    "Falling back to mock response. Details: %s",
+                    "OpenGradient LLM returned no result event after retry. "
+                    "Falling back to mock response because ALLOW_MOCK_OPENGRADIENT=true. "
+                    "Details: %s",
                     exc_msg,
                 )
                 return self._mock_llm(market_snapshot, time_horizon)

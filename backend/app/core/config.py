@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     app_name: str = "Verifiable AI Token Verdict API"
     api_prefix: str = "/api"
     environment: str = "development"
-    frontend_origin: str = "http://localhost:3000"
+    frontend_origin: str = "http://localhost:3000,http://localhost:3001"
 
     coingecko_base_url: str = "https://api.coingecko.com/api/v3"
     dexscreener_base_url: str = "https://api.dexscreener.com/latest/dex"
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("OPENGRADIENT_PRIVATE_KEY", "OG_PRIVATE_KEY"),
     )
     opengradient_model: str = "openai/gpt-4.1-2025-04-14"
-    opengradient_settlement_mode: str = "SETTLE_BATCH"
+    opengradient_settlement_mode: str = "BATCH_HASHED"
     opengradient_rpc_url: str = "https://ogevmdevnet.opengradient.ai"
     opengradient_api_url: str = "https://sdk-devnet.opengradient.ai"
     opengradient_contract_address: str = "0x8383C9bD7462F12Eb996DD02F78234C0421A6FaE"
@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     @property
     def frontend_origins(self) -> list[str]:
-        origins = [origin.strip() for origin in self.frontend_origin.split(",")]
+        origins = [origin.strip().rstrip("/") for origin in self.frontend_origin.split(",")]
         return [origin for origin in origins if origin]
 
 

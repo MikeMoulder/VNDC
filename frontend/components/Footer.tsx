@@ -1,43 +1,36 @@
-import { ShieldCheck } from "lucide-react";
-
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-neutral-950/70">
-      <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
-        <div className="flex flex-col items-center justify-between gap-5 md:flex-row md:items-center">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md border border-white/20 bg-white/10">
-              <ShieldCheck className="h-3 w-3 text-teal-300" />
-            </div>
-            <span className="text-sm font-semibold text-slate-300">
-              VNDC
-            </span>
+    <footer className="relative mt-20">
+      <div className="mx-auto h-px max-w-2xl bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-5 py-10 md:flex-row">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/80 to-indigo-600/80">
+            <span className="text-[9px] font-black text-white">V</span>
           </div>
-
-          <p className="text-center text-xs leading-relaxed text-slate-500 md:text-left">
-            Built on OpenGradient &middot; For research only &mdash; not
-            financial advice.
-          </p>
-
-          <div className="flex gap-4 text-xs text-slate-500">
-            <a
-              href="https://opengradient.ai"
-              target="_blank"
-              rel="noreferrer"
-              className="transition-colors hover:text-slate-300"
-            >
-              OpenGradient
-            </a>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-              className="transition-colors hover:text-slate-300"
-            >
-              GitHub
-            </a>
-          </div>
+          <span className="text-sm font-semibold text-zinc-500">VNDC</span>
         </div>
+
+        <p className="text-center text-[11px] leading-relaxed text-zinc-600">
+          Built on{" "}
+          <a
+            href="https://opengradient.ai"
+            target="_blank"
+            rel="noreferrer"
+            className="text-zinc-500 underline decoration-zinc-700 underline-offset-2 transition-colors hover:text-zinc-300"
+          >
+            OpenGradient
+          </a>{" "}
+          &middot; For informational purposes only &mdash; not financial advice
+        </p>
+
+        <a
+          href="https://github.com"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[11px] text-zinc-600 transition-colors hover:text-zinc-400"
+        >
+          GitHub
+        </a>
       </div>
     </footer>
   );
