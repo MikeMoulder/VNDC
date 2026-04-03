@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     app_name: str = "Verifiable AI Token Verdict API"
     api_prefix: str = "/api"
     environment: str = "development"
-    frontend_origin: str = "http://localhost:3000,http://localhost:3001"
+    frontend_origin: str = "https://vndc.vercel.app"
 
     coingecko_base_url: str = "https://api.coingecko.com/api/v3"
     dexscreener_base_url: str = "https://api.dexscreener.com/latest/dex"
