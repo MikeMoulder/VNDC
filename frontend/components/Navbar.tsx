@@ -58,7 +58,7 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <a
               href="/#analyze"
-              className="hidden items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-1.5 text-[13px] font-semibold text-white shadow-lg shadow-violet-500/20 transition-all hover:shadow-violet-500/30 hover:brightness-110 md:inline-flex"
+              className="hidden items-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] px-4 py-1.5 text-[13px] font-semibold text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white md:inline-flex"
             >
               Get Verdict
             </a>
@@ -109,7 +109,7 @@ export function Navbar() {
             <a
               href="/#analyze"
               onClick={() => setMobileOpen(false)}
-              className="mt-1 block rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white"
+              className="mt-1 block rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-3 text-center text-sm font-semibold text-zinc-100 transition-colors hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white"
             >
               Get Verdict
             </a>

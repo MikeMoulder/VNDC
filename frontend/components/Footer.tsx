@@ -1,12 +1,12 @@
+import Image from "next/image";
+
 export function Footer() {
   return (
     <footer className="relative mt-20">
       <div className="mx-auto h-px max-w-2xl bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 px-5 py-10 md:flex-row">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-violet-500/80 to-indigo-600/80">
-            <span className="text-[9px] font-black text-white">V</span>
-          </div>
+          <Image src="/logo.svg" alt="VNDC" width={28} height={28} className="drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
           <span className="text-sm font-semibold text-zinc-500">VNDC</span>
         </div>
 
@@ -20,11 +20,10 @@ export function Footer() {
           >
             OpenGradient
           </a>{" "}
-          &middot; For informational purposes only &mdash; not financial advice
         </p>
 
         <a
-          href="https://github.com"
+          href="https://github.com/MikeMoulder/VNDC"
           target="_blank"
           rel="noreferrer"
           className="text-[11px] text-zinc-600 transition-colors hover:text-zinc-400"

@@ -152,10 +152,10 @@ export default function HomePage() {
                     <span
                       key={r}
                       className={`rounded-lg px-3 py-1.5 text-xs font-bold ${r === "BUY"
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : r === "WATCH"
-                            ? "bg-amber-500/10 text-amber-400"
-                            : "bg-red-500/10 text-red-400"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : r === "WATCH"
+                          ? "bg-amber-500/10 text-amber-400"
+                          : "bg-red-500/10 text-red-400"
                         }`}
                     >
                       {r}
@@ -325,7 +325,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={!query.trim()}
-                  className="group w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition-all hover:shadow-violet-500/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none"
+                  className="group w-full rounded-xl border border-white/[0.1] bg-white/[0.04] py-3 text-sm font-bold text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   Generate Verdict
                 </button>

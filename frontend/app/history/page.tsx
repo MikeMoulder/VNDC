@@ -77,7 +77,7 @@ export default function HistoryPage() {
           <p className="mt-2 text-sm text-zinc-500">Run an analysis to see results here</p>
           <Link
             href="/"
-            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition-all hover:brightness-110"
+            className="mt-7 inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-6 py-3 text-sm font-bold text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all hover:border-white/[0.18] hover:bg-white/[0.08] hover:text-white"
           >
             Run Analysis
           </Link>
