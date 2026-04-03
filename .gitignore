@@ -8,6 +8,9 @@ backend/.pytest_cache/
 backend/.env
 .venv/
 .env
+/venv
+backend/venv
+backend/log
 
 # Tooling
 .mypy_cache/
